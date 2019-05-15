@@ -10,3 +10,6 @@ Made with discord.py 0.16.0/0.16.12 and python3
 
 # Tested on
 - Raspberry pi 2 & 3
+
+# Links
+[Installing - Linux](https://github.com/Articuno1234/ArtCustomBot/wiki) | [Discord](https://discord.gg/6V82bKP) | [Github](https://github.com/Articuno1234)
