@@ -66,7 +66,8 @@ def create():
     data = {}
     data['Config'] = []
     data['Config'].append({
-        'ownerid': "did"
+        'ownerid': "{}".format(did),
+        'errorchannel': "None"
         })
     with open('data/utils/settings.json', 'w') as outfile:
         json.dump(data, outfile)

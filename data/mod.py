@@ -1,11 +1,39 @@
+#  ============================================== ArtCustomBot ==============================================  #
+# | Made by Artucuno                                  ||||                    https://github.com/Articuno1234| #
+# | https://discord.gg/6V82bKP                        ||||                             First version: 13/5/19| #
+#  ==========================================================================================================  #
+
 import discord
 from discord.ext import commands
 import random
 from discord.ext.commands.cooldowns import BucketType
-
+import logging
+from utils import checks
+import os
+numtest = 1
 class mod():
     def __init__(self, bot):
         self.bot = bot
+
+    @commands.command(pass_context=True)
+    async def purge(self, ctx, number: int):
+        """Delete Messages"""
+        if ctx.message.author.server_permissions.manage_messages:
+            pass
+        else:
+            await self.bot.say("You do not have perms!")
+            return
+        author = ctx.message.author
+        channel = ctx.message.channel
+        try:
+            msges = 0
+            if number > 0 and number < 10000:
+                async for x in self.bot.logs_from(channel, limit=number + 1):
+                    await self.bot.delete_message(x)
+                    msges += 1
+                await self.bot.say("Purged {} messages!".format(msges))
+        except discord.errors.Forbidden:
+            await self.bot.say("I need permissions to manage messages in this channel.")
 
     @commands.command(pass_context=True)
     async def ban(self, ctx, user: discord.User = None):

@@ -1,16 +1,20 @@
 from discord.ext import commands
 import discord.utils
 import json
+import os
 
-def is_owner_check(message):
-    if os.path.isfile('data/utils/settings.json'):
-        with open('data/utils/settings.json') as json_file:  
-            data = json.load(json_file)
-            for p in data['Config']:
-                return message.author.id == '{}'.format(p['ownerid'])
+try:
+    def is_owner_check(message):
+        if os.path.isfile('data/utils/settings.json'):
+            with open('data/utils/settings.json') as json_file:  
+                data = json.load(json_file)
+                for p in data['Config']:
+                    return message.author.id == '{}'.format(p['ownerid'])
 
-def is_owner():
-    return commands.check(lambda ctx: is_owner_check(ctx.message))
+    def is_owner():
+        return commands.check(lambda ctx: is_owner_check(ctx.message))
+except:
+    pass
 
 # The permission system of the bot is based on a "just works" basis
 # You have permissions and the bot has permissions. If you meet the permissions
