@@ -7,6 +7,8 @@ Made with discord.py 0.16.0/0.16.12 and python3
 - Moderation
 - Customisation
 - Server
+- Autorole / Welcome Message
+- Fully Customisable
 
 # Tested on
 - Raspberry pi 2 & 3

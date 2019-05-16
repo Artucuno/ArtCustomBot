@@ -14,6 +14,7 @@ import json
 import time
 import subprocess
 import botextensions as botext
+import asyncio
 
 class main():
     def __init__(self, bot):
@@ -86,27 +87,27 @@ class main():
         else:
             await self.bot.say(":x: Could not find the code file!")
             return
-
+    @checks.is_owner()
     @commands.command(pass_context=True, no_pm=True)
-    async def errchannel(self, ctx, id=""):
+    async def errchannel(self, ctx, chann: discord.Channel = None):
         """Set error logging channel
 
         set errorchannel [id]"""
         author = ctx.message.author
-        channel = await self.bot.get_channel(id)
-        await self.bot.say("Are you sure you want to set <#{}> as your error log channel? type yes or no")
+        channel = self.bot.get_channel(chann.id)
+        await self.bot.say("Are you sure you want to set <#{}> as your error log channel? type yes or no".format(channel.id))
         msg = await self.bot.wait_for_message(author=author, content='yes')
-        if os.path.isfile('data/utils/config.json'):
-            with open('data/utils/config.json') as json_file:  
+        if os.path.isfile('data/utils/settings.json'):
+            with open('data/utils/settings.json') as json_file:  
                 data = json.load(json_file)
                 for p in data['Config']:
                     data = {}
                     data['Config'] = []
                     data['Config'].append({
                         'ownerid': p['ownerid'],
-                        'errorchannel': "{}".format(id)
+                        'errorchannel': "{}".format(channel.id)
                         })
-                    with open('data/config.json', 'w') as outfile:
+                    with open('data/utils/settings.json', 'w') as outfile:
                         json.dump(data, outfile)
                     await self.bot.say("Set Error logging channel!")
 
@@ -154,8 +155,19 @@ class main():
     @commands.command(pass_context=True)
     async def shutdown(self, ctx):
         """Shutdown"""
+        voicec = 0
         await self.bot.say(":wave:")
         print("[CONSOLE] Logging out...")
+        asyncio.sleep(5)
+        try:
+            for x in self.bot.voice_clients:
+                voicec += 1
+                await x.disconnect()
+            time.sleep(2)
+            print("[AUDIO] Disconnected {} voice clients!".format(voicec))
+        except:
+            pass
+        asyncio.sleep(15)
         await self.bot.logout()
         exit(10)
 
@@ -163,8 +175,14 @@ class main():
     @commands.command(pass_context=True)
     async def restart(self, ctx):
         """Restart"""
+        voicec = 0
         await self.bot.say("Restarting...")
         print("[CONSOLE] Restarting...")
+        for x in self.bot.voice_clients:
+            voicec += 1
+            await x.disconnect()
+        print("[AUDIO] Disconnected {} voice clients!".format(voicec))
+        asyncio.sleep(15)
         await self.bot.logout()
         subprocess.call(("python3", "data/run.py"))
 

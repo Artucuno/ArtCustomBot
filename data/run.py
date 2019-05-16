@@ -73,6 +73,28 @@ else:
     exit(10)
 
 @bot.event
+async def on_member_join(member):
+    if os.path.isfile('data/acb/cogs/autorole/{}/config.json'.format(member.server.id)):
+        with open('data/acb/cogs/autorole/{}/config.json'.format(member.server.id)) as json_file:  
+            data = json.load(json_file)
+            for p in data['Config']:
+                role = discord.utils.get(member.server.roles, name=p['role'])
+                await bot.add_roles(member, role)
+                pass
+    if os.path.isfile('data/cogs/welcome/{}/config.json'.format(member.server.id)):
+        with open('data/cogs/welcome/{}/config.json'.format(member.server.id)) as json_file:  
+            data = json.load(json_file)
+            for p in data['Welcome']:
+                try:
+                    channel = bot.get_channel(p['channel'])
+                    em = discord.Embed(color=0x000000, description=p['msg'])
+                    em.set_author(name=member, icon_url=member.avatar_url)
+                    await bot.send_message(channel, embed=em)
+                    mg = await bot.send_message(channel, "<@{}>".format(member.id))
+                    await bot.delete_message(mg)
+                except:
+                    pass
+@bot.event
 async def on_resumed():
     print("[CONSOLE] Resumed bot")
 
@@ -89,10 +111,11 @@ async def on_command_error(error, ctx):
                 data = json.load(json_file)
                 for p in data['Config']:
                     try:
-                        channel = await bot.get_channel(p['errorchannel'])
-                        await bot.send_message(channel, "`[{}]` `{}` ```py\n{}\n```".format(ctx.message.server, ctx.message.author, error))
-                    except:
-                        print("[CONSOLE] Unable to send error message to log channel!")
+                        channel = bot.get_channel(p['errorchannel'])
+                        await bot.send_message(channel, "`[{}]` `{}` `{}` ```py\n{}\n```".format(ctx.message.server, ctx.message.author, commands, error))
+                    except Exception as e:
+                        exc = '{}: {}'.format(type(e).__name__, e)
+                        print("[CONSOLE] Unable to send error message to log channel!\n{}".format(exc))
 
 @bot.event
 async def on_ready():
@@ -120,6 +143,8 @@ async def on_ready():
           "Users    {}\n".format(servers, channels, users))
     print("\n"
           "URL : https://discordapp.com/oauth2/authorize?client_id={}&scope=bot&permissions=-1".format(bot.user.id))
+    print("\n"
+          "----- COGS -----")
     if __name__ == "__main__":
         for extension in botext.extensions:
             try:
@@ -153,6 +178,9 @@ async def on_ready():
 @bot.command(pass_context=True)
 async def stats(ctx):
     """Show bot statistics"""
+    import datetime
+    today = datetime.date.today()
+    since = datetime.date(2019, 5, 13)
     users = len(set(bot.get_all_members()))
     servers = len(bot.servers)
     channels = len([c for c in bot.get_all_channels()])
@@ -166,6 +194,7 @@ async def stats(ctx):
     em.add_field(name='Commands', value=(len(bot.commands)))
     em.add_field(name='Discord.py', value=(discord.__version__))
     em.add_field(name='Uptime', value=(uptime))
+    em.set_footer(text='Running since {} days'.format(today - since))
     msg = await bot.say(embed=em)
     # just a bit extra lol
     await bot.edit_message(msg, embed=em)
@@ -198,7 +227,7 @@ if os.path.isfile('data/config.json'):
         data = json.load(json_file)
         for p in data['Config']:
             clear_screen()
-            print("Logging in as {}".format(tken.token))
+            print("Logging into Discord...")
             time.sleep(2)
             clear_screen()
             loop = asyncio.get_event_loop()
