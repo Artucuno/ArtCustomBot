@@ -15,8 +15,9 @@ class server():
     @commands.command(pass_context=True)
     async def serverinfo(self, ctx):
         """Show current server info"""
-        em = discord.Embed(0x000000)
-        em.set_author(text=ctx.message.server)
+        server = ctx.message.server
+        em = discord.Embed()
+        em.set_author(name=ctx.message.server)
         em.add_field(name="Owner", value=(ctx.message.server.owner))
         em.add_field(name="ID", value=(ctx.message.server.id))
         em.add_field(name="Created At", value=(ctx.message.server.created_at))

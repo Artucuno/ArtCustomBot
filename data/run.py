@@ -1,3 +1,4 @@
+gitrepo = "https://github.com/Articuno1234/ArtCustomBot"
 #  ============================================== ArtCustomBot ==============================================  #
 # | Made by Artucuno                                  ||||                    https://github.com/Articuno1234| #
 # | https://discord.gg/6V82bKP                        ||||                             First version: 13/5/19| #
@@ -46,7 +47,7 @@ if os.path.isfile('data/config.json'):
         for p in data['Config']:
             global botdesc
             botdesc = "{}".format(p['Descript'])
-
+import aiohttp
 IS_WINDOWS = os.name == "nt"
 IS_MAC = sys.platform == "darwin"
 
@@ -80,11 +81,10 @@ async def on_member_join(member):
             for p in data['Config']:
                 role = discord.utils.get(member.server.roles, name=p['role'])
                 await bot.add_roles(member, role)
-                pass
-    if os.path.isfile('data/cogs/welcome/{}/config.json'.format(member.server.id)):
-        with open('data/cogs/welcome/{}/config.json'.format(member.server.id)) as json_file:  
+    if os.path.isfile('data/acb/cogs/welcome/{}/config.json'.format(member.server.id)):
+        with open('data/acb/cogs/welcome/{}/config.json'.format(member.server.id)) as json_file:  
             data = json.load(json_file)
-            for p in data['Welcome']:
+            for p in data['Config']:
                 try:
                     channel = bot.get_channel(p['channel'])
                     em = discord.Embed(color=0x000000, description=p['msg'])
@@ -92,7 +92,7 @@ async def on_member_join(member):
                     await bot.send_message(channel, embed=em)
                     mg = await bot.send_message(channel, "<@{}>".format(member.id))
                     await bot.delete_message(mg)
-                except:
+                except Exception as e:
                     pass
 @bot.event
 async def on_resumed():
@@ -112,7 +112,7 @@ async def on_command_error(error, ctx):
                 for p in data['Config']:
                     try:
                         channel = bot.get_channel(p['errorchannel'])
-                        await bot.send_message(channel, "`[{}]` `{}` `{}` ```py\n{}\n```".format(ctx.message.server, ctx.message.author, commands, error))
+                        await bot.send_message(channel, "```ini\n [{}] {} {} \n[ ------------------------------------------------------- ]\n{}\n[ ------------------------------------------------------- ]\n[ {} ]```".format(ctx.message.server, ctx.message.author, commands, error, time.asctime()))
                     except Exception as e:
                         exc = '{}: {}'.format(type(e).__name__, e)
                         print("[CONSOLE] Unable to send error message to log channel!\n{}".format(exc))
@@ -155,6 +155,11 @@ async def on_ready():
                     print("[COG] Loaded {}".format(extension))
             except Exception as e:
                 exc = '{}: {}'.format(type(e).__name__, e)
+                if extension == "bot":
+                    input("[CONSOLE] Unable to load required extension '{}'".format(extension))
+                    print("[CONSOLE] Logging out...")
+                    await bot.logout()
+                    exit()
                 print('[COG] Failed to load extension {}\n{}'.format(extension, exc))
     if os.path.isfile('data/game.json'):
         with open('data/game.json') as json_file:  
@@ -174,13 +179,14 @@ async def on_ready():
                         await mdbl.post(servers, users, channels, cmds)
                     else:
                         subprocess.call(("git", "clone", "https://github.com/MegaDiscordBotList/apipy.git", "data/apipy"))
+    print("----- Bot -----")
 
 @bot.command(pass_context=True)
 async def stats(ctx):
     """Show bot statistics"""
     import datetime
     today = datetime.date.today()
-    since = datetime.date(2019, 5, 13)
+    since = datetime.date(2019, 5, 12)
     users = len(set(bot.get_all_members()))
     servers = len(bot.servers)
     channels = len([c for c in bot.get_all_channels()])
@@ -194,33 +200,28 @@ async def stats(ctx):
     em.add_field(name='Commands', value=(len(bot.commands)))
     em.add_field(name='Discord.py', value=(discord.__version__))
     em.add_field(name='Uptime', value=(uptime))
-    em.set_footer(text='Running since {} days'.format(today - since))
+    em.set_footer(text='Running since {} days | Say "next" for more info or say "exit"'.format(today - since))
+
+    if os.path.isfile('data/utils/settings.json'):
+        with open('data/utils/settings.json') as json_file:  
+            data = json.load(json_file)
+            for p in data['Config']:
+                eem = discord.Embed(description="Made with [ArtCustomBot](https://github.com/Articuno1234/ArtCustomBot)")
+                eem.set_author(name='Bot Statistics')
+                eem.add_field(name='Owned by', value=("<@{}> ({})".format(p['ownerid'], p['owner'])))
+                eem.add_field(name='Github', value=(gitrepo))
+                eem.set_footer(text='Running since {} days'.format(today - since))
+
+    emmm = discord.Embed(description="Timed Out/Exited!")
     msg = await bot.say(embed=em)
-    # just a bit extra lol
-    await bot.edit_message(msg, embed=em)
-    asyncio.sleep(5)
-    await bot.edit_message(msg, embed=em)
-    asyncio.sleep(5)
-    await bot.edit_message(msg, embed=em)
-    asyncio.sleep(5)
-    await bot.edit_message(msg, embed=em)
-    asyncio.sleep(5)
-    await bot.edit_message(msg, embed=em)
-    asyncio.sleep(5)
-    await bot.edit_message(msg, embed=em)
-    asyncio.sleep(5)
-    await bot.edit_message(msg, embed=em)
-    asyncio.sleep(5)
-    await bot.edit_message(msg, embed=em)
-    asyncio.sleep(5)
-    await bot.edit_message(msg, embed=em)
-    asyncio.sleep(5)
-    await bot.edit_message(msg, embed=em)
-    asyncio.sleep(5)
-    await bot.edit_message(msg, embed=em)
-    asyncio.sleep(5)
-    await bot.edit_message(msg, embed=em)
-    asyncio.sleep(5)
+    mss = await bot.wait_for_message(author=ctx.message.author)
+    if mss.content == "next" or "exit":
+        if mss.content == "next":
+            await bot.edit_message(msg, embed=eem)
+        if mss.content == "exit":
+            await bot.edit_message(msg, embed=emmm)
+    else:
+        await bot.edit_message(msg, embed=emmm)
 
 if os.path.isfile('data/config.json'):
     with open('data/config.json') as json_file:  
@@ -230,5 +231,10 @@ if os.path.isfile('data/config.json'):
             print("Logging into Discord...")
             time.sleep(2)
             clear_screen()
-            loop = asyncio.get_event_loop()
-            loop.run_until_complete(bot.run(tken.token))
+            try:
+                loop = asyncio.get_event_loop()
+                loop.run_until_complete(bot.run(tken.token))
+            except Exception as e:
+                exc = '{}: {}'.format(type(e).__name__, e)
+                print("Unable to login to Discord!\n{}".format(exc))
+                exit(1)

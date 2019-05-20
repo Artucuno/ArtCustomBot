@@ -45,7 +45,7 @@ def create():
     tken = user_choice()
     print("Enter prefix!")
     pref = user_choice()
-    print("Enter your discord id!")
+    print("Enter your discord id! (You can set this later by using {}owner)".format(pref))
     did = user_choice()
     print("[CONSOLE] Creating data files")
     data = {}
@@ -66,6 +66,7 @@ def create():
     data = {}
     data['Config'] = []
     data['Config'].append({
+        'owner': "Artucuno#1898",
         'ownerid': "{}".format(did),
         'errorchannel': "None"
         })

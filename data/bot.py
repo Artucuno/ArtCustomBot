@@ -15,6 +15,22 @@ import time
 import subprocess
 import botextensions as botext
 import asyncio
+debugcommandreq = False
+try:
+    import inspect
+    print("[IMPORT] Imported Inspect!")
+except:
+    print("[COG] Installing Requirements for debug command!")
+    code = subprocess.call(("pip3", "install", "inspect"))
+    if code == 0:
+        debugcommandreq = True
+    else:
+        codee = subprocess.call(("pip", "install", "inspect"))
+        if code == 0:
+            debugcommandreq = True
+        else:
+            print("[COG] Unable to install requirements so the command 'debug' will be disabled!")
+            debugcommandreq = False
 
 class main():
     def __init__(self, bot):
@@ -55,7 +71,7 @@ class main():
         data = {}
         data['Owner'] = []
         data['Owner'].append({
-            'code': "{}{}{}{}{}{}{}".format(random.choice(char), random.choice(char), random.choice(char), random.choice(char), random.choice(char), random.choice(char), random.choice(char))
+            'code': "{}{}{}{}{}{}{}{}{}{}{}{}{}".format(random.choice(char), random.choice(char), random.choice(char), random.choice(char), random.choice(char), random.choice(char), random.choice(char), random.choice(char), random.choice(char), random.choice(char), random.choice(char), random.choice(char), random.choice(char))
             })
         with open('data/code.json', 'w') as outfile:
             json.dump(data, outfile)
@@ -73,6 +89,7 @@ class main():
                                 data = {}
                                 data['Config'] = []
                                 data['Config'].append({
+                                    'owner': "{}".format(msg.author),
                                     'ownerid': "{}".format(msg.author.id),
                                     'errorchannel': p['errorchannel']
                                     })
@@ -80,7 +97,7 @@ class main():
                                     json.dump(data, outfile)
                                 os.remove("data/code.json")
                                 await self.bot.say("<@{}> is now the bot owner!".format(msg.author.id))
-                                print("[CONSOLE] {} is the new bot owner | Restarting...")
+                                print("[CONSOLE] {} is the new bot owner | Restarting...".format(msg.author))
                                 await self.bot.change_presence(status=discord.Status.dnd)
                                 self.bot.logout()
                                 subprocess.call(("python3", "data/run.py"))
@@ -104,6 +121,7 @@ class main():
                     data = {}
                     data['Config'] = []
                     data['Config'].append({
+                        'owner': p['owner'],
                         'ownerid': p['ownerid'],
                         'errorchannel': "{}".format(channel.id)
                         })
@@ -170,6 +188,36 @@ class main():
         asyncio.sleep(15)
         await self.bot.logout()
         exit(10)
+
+    @checks.is_owner()
+    @commands.command(pass_context=True, hidden=True)
+    async def debug(self, ctx, *, code : str):
+        """Debug a script"""
+        if debugcommandreq == False:
+            await self.bot.say("This command is disabled due to lack of requirements!")
+            return
+        code = code.strip('` ')
+        python = '```py\n{}\n```'
+        result = None
+
+        env = {
+            'bot': self.bot,
+            'ctx': ctx,
+            'message': ctx.message,
+            'server': ctx.message.server,
+            'channel': ctx.message.channel,
+            'author': ctx.message.author,
+        }
+
+        env.update(globals())
+
+        try:
+            result = eval(code, env)
+            if inspect.isawaitable(result):
+                result = await result
+        except Exception as e:
+            await self.bot.say(python.format(type(e).__name__ + ': ' + str(e)))
+            return
 
     @checks.is_owner()
     @commands.command(pass_context=True)
