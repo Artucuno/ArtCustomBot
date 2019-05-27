@@ -19,31 +19,32 @@ class fun():
     async def dice(self, ctx):
         """Roll the dice"""
         nums = ['1', '2', '3', '4', '5', '6']
-        await self.bot.say(random.choice(nums))
+        await ctx.send(random.choice(nums))
 
     @commands.command()
-    async def cat(self):
+    async def cat(self, ctx):
         """Show random images of cats"""
         resp = await self.session.get("http://aws.random.cat/meow")
         image_url = await resp.json()
         resp.close()
         image_url = image_url["file"]
-        msg = await self.bot.say("Loading...")
-        await self.bot.edit_message(msg, image_url)
+        msg = await ctx.send("Loading...")
+        await msg.edit(content=image_url)
         
     @commands.command()
-    async def dog(self):
+    async def dog(self, ctx):
         """Show random images of dogs"""
         resp = await self.session.get("https://random.dog/woof.json")
         image_url = await resp.json()
         resp.close()
         image_url = image_url["url"]
-        msg = await self.bot.say("Loading...")
-        await self.bot.edit_message(msg, image_url)
+        msg = await ctx.send("Loading...")
+        await msg.edit(content=image_url)
 
     @commands.command(pass_context=True)
     async def say(self, ctx, *, msg=""):
         """Make me say something"""
-        await self.bot.say(msg)
+        await ctx.send(msg)
+
 def setup(bot):
         bot.add_cog(fun(bot))

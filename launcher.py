@@ -98,17 +98,20 @@ def create():
 
 def launch():
     clear_screen()
+    print(subprocess.call(("python", "--version")))
     print("-=-=-=-=-=-=-=-=-=-\n"
           "    ArtCustomBot   \n"
+          "         V2        \n"
           "-=-=-=-=-=-=-=-=-=-")
     print("1. Run\n"
           "2. Delete Bot (NOT RECOMMENDED!)\n"
           "3. Update Bot help description\n"
-          "4. Update Bot")
+          "4. Update Bot\n"
+          "*** PLEASE REPORT BUGS OR GLITCHES! ***")
     choice = user_choice()
     if choice == "1":
         clear_screen()
-        code = subprocess.call(("python3", "data/run.py"))
+        code = subprocess.call((sys.executable, "data/run.py"))
         if code == "0":
             pass
         else:

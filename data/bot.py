@@ -21,7 +21,7 @@ try:
     print("[IMPORT] Imported Inspect!")
 except:
     print("[COG] Installing Requirements for debug command!")
-    code = subprocess.call(("pip3", "install", "inspect"))
+    code = subprocess.call(("pip", "install", "inspect"))
     if code == 0:
         debugcommandreq = True
     else:
@@ -44,7 +44,7 @@ class main():
         game [type] [game]
         owner [id]
         errchannel [id]"""
-        await self.bot.say("```\n"
+        await ctx.send("```\n"
                            "Set bot settings\n"
                            "set game [type] [game]\n"
                            "set owner [id]\n"
@@ -60,13 +60,14 @@ class main():
         await self.bot.change_presence(game=discord.Game(name=game, type=typ))
 
     @commands.command(pass_context=True, no_pm=True)
-    async def owner(self, ctx):
+    async def owner(self, ctx, user: discord.Member = None):
         """Set bot owner
 
         set owner [id]"""
         char = ["a", "A", "Q", "G", "h", "L", "%", "@", "=", "+", "/", "-", "y", "o", "O", "$", "E"]
         author = ctx.message.author
-        await self.bot.say("I have sent a code to the bot console please type it in chat!")
+        channel = ctx.message.channel
+        await ctx.send("I have sent a code to the bot console please type it in chat!")
         data = {}
         data['Owner'] = []
         data['Owner'].append({
@@ -80,7 +81,10 @@ class main():
                 data = json.load(json_file)
                 for p in data['Owner']:
                     print("[CONSOLE] Owner Code: {}".format(p['code']))
-                    msg = await self.bot.wait_for_message(content=p['code'])
+                    time.sleep(1)
+                    def check(m):
+                        return m.content == '{}'.format(p['code']) and m.channel == channel
+                    msg = await self.bot.wait_for("{}".format(p['code']), check=check)
                     if os.path.isfile('data/utils/settings.json'):
                         with open('data/utils/settings.json') as json_file:  
                             data = json.load(json_file)
@@ -95,24 +99,25 @@ class main():
                                 with open('data/utils/settings.json', 'w') as outfile:
                                     json.dump(data, outfile)
                                 os.remove("data/code.json")
-                                await self.bot.say("<@{}> is now the bot owner!".format(msg.author.id))
+                                await ctx.send("<@{}> is now the bot owner!".format(msg.author.id))
                                 print("[CONSOLE] {} is the new bot owner | Restarting...".format(msg.author))
                                 await self.bot.change_presence(status=discord.Status.dnd)
                                 self.bot.logout()
-                                subprocess.call(("python3", "data/run.py"))
+                                subprocess.call((sys.executable, "data/run.py"))
         else:
-            await self.bot.say(":x: Could not find the code file!")
+            await ctx.send(":x: Could not find the code file!")
             return
+
     @checks.is_owner()
     @commands.command(pass_context=True, no_pm=True)
-    async def errchannel(self, ctx, chann: discord.Channel = None):
+    async def errchannel(self, ctx, chann = None):
         """Set error logging channel
 
         set errorchannel [id]"""
         author = ctx.message.author
         channel = self.bot.get_channel(chann.id)
-        await self.bot.say("Are you sure you want to set <#{}> as your error log channel? type yes or no".format(channel.id))
-        msg = await self.bot.wait_for_message(author=author, content='yes')
+        await ctx.send("Are you sure you want to set <#{}> as your error log channel? type yes or no".format(channel.id))
+        msg = await self.bot.wait_for(author=author, content='yes')
         if os.path.isfile('data/utils/settings.json'):
             with open('data/utils/settings.json') as json_file:  
                 data = json.load(json_file)
@@ -127,7 +132,7 @@ class main():
                     with open('data/utils/settings.json', 'w') as outfile:
                         json.dump(data, outfile)
                     
-                    await self.bot.say("Set Error logging channel!")
+                    await ctx.send("Set Error logging channel!")
 
 
     @checks.is_owner()
@@ -137,11 +142,11 @@ class main():
         try:
             self.bot.unload_extension(cog)
             self.bot.load_extension(cog)
-            await self.bot.say(":joy: :ok_hand: ")
+            await ctx.send(":joy: :ok_hand: ")
             print("[CONSOLE] The cog '{}' was reloaded".format(cog))
         except Exception as e:
             exc = ':x: {}: {}'.format(type(e).__name__, e)
-            await self.bot.say(exc)
+            await ctx.send(exc)
 
     @checks.is_owner()
     @commands.command(pass_context=True)
@@ -150,11 +155,11 @@ class main():
         author = ctx.message.author
         try:
             self.bot.load_extension(cog)
-            await self.bot.say(":ok_hand: ")
+            await ctx.send(":ok_hand: ")
             print("[CONSOLE] The cog '{}' was loaded".format(cog))
         except Exception as e:
             exc = ':x: {}: {}'.format(type(e).__name__, e)
-            await self.bot.say(exc)
+            await ctx.send(exc)
 
     @checks.is_owner()
     @commands.command(pass_context=True)
@@ -163,18 +168,18 @@ class main():
         author = ctx.message.author
         try:
             self.bot.load_extension(cog)
-            await self.bot.say(":ok_hand: ")
+            await ctx.send(":ok_hand: ")
             print("[CONSOLE] The cog '{}' was loaded".format(cog))
         except Exception as e:
             exc = ':x: {}: {}'.format(type(e).__name__, e)
-            await self.bot.say(exc)
+            await ctx.send(exc)
 
     @checks.is_owner()
     @commands.command(pass_context=True)
     async def shutdown(self, ctx):
         """Shutdown"""
         voicec = 0
-        await self.bot.say(":wave:")
+        await ctx.send(":wave:")
         print("[CONSOLE] Logging out...")
         asyncio.sleep(5)
         try:
@@ -194,7 +199,7 @@ class main():
     async def debug(self, ctx, *, code : str):
         """Debug a script"""
         if debugcommandreq == False:
-            await self.bot.say("This command is disabled due to lack of requirements!")
+            await ctx.send("This command is disabled due to lack of requirements!")
             return
         code = code.strip('` ')
         python = '```py\n{}\n```'
@@ -204,7 +209,7 @@ class main():
             'bot': self.bot,
             'ctx': ctx,
             'message': ctx.message,
-            'server': ctx.message.server,
+            'server': ctx.message.guild,
             'channel': ctx.message.channel,
             'author': ctx.message.author,
         }
@@ -216,7 +221,7 @@ class main():
             if inspect.isawaitable(result):
                 result = await result
         except Exception as e:
-            await self.bot.say(python.format(type(e).__name__ + ': ' + str(e)))
+            await ctx.send(python.format(type(e).__name__ + ': ' + str(e)))
             return
 
     @checks.is_owner()
@@ -224,7 +229,7 @@ class main():
     async def restart(self, ctx):
         """Restart"""
         voicec = 0
-        await self.bot.say("Restarting...")
+        await ctx.send("Restarting...")
         print("[CONSOLE] Restarting...")
         for x in self.bot.voice_clients:
             voicec += 1

@@ -48,13 +48,13 @@ class audio():
         try:
             voice = await self.bot.join_voice_channel(ctx.message.author.voice_channel)
         except:
-            await self.bot.say("Unable to join voice channel!")
+            await ctx.send("Unable to join voice channel!")
 
     @commands.command(pass_context=True)
     async def play(self, ctx, url=""):
         """Play something"""
         author = ctx.message.author
-        server = ctx.message.server
+        server = ctx.message.guild
         role = discord.Role = drole
         if drole == None:
             pass
@@ -62,10 +62,10 @@ class audio():
             if drole in [y.id for y in author.roles]:
                 pass
             else:
-                await self.bot.say(":x: You do not have the required role (`{}`)\n".format(drole, role))
+                await ctx.send(":x: You do not have the required role (`{}`)\n".format(drole, role))
                 return
         if url == "":
-            await self.bot.say("```\n"
+            await ctx.send("```\n"
                                "play [url]\n"
                                "```")
         else:
@@ -73,7 +73,7 @@ class audio():
                 voice = await self.bot.join_voice_channel(ctx.message.author.voice_channel)
             except:
                 for x in self.bot.voice_clients:
-                    if(x.server == ctx.message.server):
+                    if(x.server == ctx.message.guild):
                         await x.disconnect()
                         voice = await self.bot.join_voice_channel(ctx.message.author.voice_channel)
             player = await voice.create_ytdl_player(url)
@@ -89,14 +89,14 @@ class audio():
                                     em = discord.Embed()
                                     em.set_author(name='Now Playing {}...'.format(player.title))
                                     em.set_footer(text='Failed song request found! | {} | {} | {} | found by {}'.format(p['url'], p['date'], p['title'], p['foundby']))
-                                    await self.bot.say(embed=em)
+                                    await ctx.send(embed=em)
                     else:
                         em = discord.Embed()
                         em.add_field(name='Now playing...', value=(player.title))
                         em.add_field(name='Uploader', value=(player.uploader))
                         em.add_field(name='Description', value=(player.description))
                         em.add_field(name='Duration', value=(player.duration))
-                        await self.bot.say(embed=em)
+                        await ctx.send(embed=em)
                 except Exception as e:
                     data = {}
                     data['Config'] = []
@@ -117,7 +117,7 @@ class audio():
     async def disconnect(self, ctx):
         """Disconnect from a voice channel"""
         for x in self.bot.voice_clients:
-            if(x.server == ctx.message.server):
+            if(x.server == ctx.message.guild):
                 return await x.disconnect()
     
 

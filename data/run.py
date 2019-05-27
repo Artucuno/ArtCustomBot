@@ -137,16 +137,16 @@ class Formatter(commands.HelpFormatter):
             self._paginator.add_line(shortened)
 
 @bot.event
-async def on_command(command, ctx):
+async def on_command(ctx):
     if sett.commandoutput == True:
-        print("[COMMAND] {{}} ({}{}) {}".format(ctx.message.server, botpref, command, ctx.message.author))
-    if command in sett.commands:
+        print("[COMMAND] {} ({}{}) {}".format(ctx.message.guild, botpref, ctx.command, ctx.message.author))
+    if ctx.command in sett.commands:
         if command == "stats":
             print("[COMMAND] Unable to disable this command!")
         elif command == "help":
             print("[COMMAND] Unable to disable this command!")
         else:
-            await self.bot.say(":x: Command disabled by Owner!")
+            await self.ctx.send(":x: Command disabled by Owner!")
             return
 
 @bot.event
@@ -181,30 +181,30 @@ async def on_member_join(member):
 async def on_resumed():
     print("[CONSOLE] Reconnected Bot")
 
-@bot.event
-async def on_command_error(error, ctx):
-    if isinstance(error, commands.CommandOnCooldown):
-        await bot.send_message(ctx.message.channel, content='This command is on a %.2fs cooldown!' % error.retry_after)
-    elif isinstance(error, commands.CommandNotFound):
-        pass
-    elif isinstance(error, commands.BadArgument):
-        try:
-            await send_cmd_help(ctx)
-        except Exception as e:
-            exc = '{}: {}'.format(type(e).__name__, e)
-            print("[CONSOLE] Unable to send error message to log channel!\n{}".format(exc))
-    else:
-        print("\n[{}] \n{}".format(ctx.message.server, error))
-        if os.path.isfile('data/utils/settings.json'):
-            with open('data/utils/settings.json') as json_file:  
-                data = json.load(json_file)
-                for p in data['Config']:
-                    try:
-                        channel = bot.get_channel(p['errorchannel'])
-                        await bot.send_message(channel, "```ini\n [{}] {} {} \n[ ------------------------------------------------------- ]\n{}\n[ ------------------------------------------------------- ]\n[ {} ]```".format(ctx.message.server, ctx.message.author, commands, error, time.asctime()))
-                    except Exception as e:
-                        exc = '{}: {}'.format(type(e).__name__, e)
-                        print("[CONSOLE] Unable to send error message to log channel!\n{}".format(exc))
+#@bot.event
+#async def on_command_error(error, ctx):
+#    if isinstance(error, commands.CommandOnCooldown):
+#       await bot.send_message(ctx.message.channel, content='This command is on a %.2fs cooldown!' % error.retry_after)
+#    elif isinstance(error, commands.CommandNotFound):
+#        pass
+#    elif isinstance(error, commands.BadArgument):
+#        try:
+#            await send_cmd_help(ctx)
+#        except Exception as e:
+#            exc = '{}: {}'.format(type(e).__name__, e)
+#            print("[CONSOLE] Unable to send error message to log channel!\n{}".format(exc))
+#    else:
+#       print("\n[CONSOLE ERROR]\n{}".format(error))
+#       if os.path.isfile('data/utils/settings.json'):
+#            with open('data/utils/settings.json') as json_file:  
+#                data = json.load(json_file)
+#                for p in data['Config']:
+#                    try:
+#                        channel = bot.get_channel(p['errorchannel'])
+#                        await channel.send("```ini\n [{}] {} {} \n[ ------------------------------------------------------- ]\n{}\n[ ------------------------------------------------------- ]\n[ {} ]```".format(ctx.message.guild, ctx.author, commands, error, time.asctime()))
+#                    except Exception as e:
+#                        exc = '{}: {}'.format(type(e).__name__, e)
+#                        print("[CONSOLE] Unable to send error message to log channel!\n{}".format(exc))
 
 @bot.event
 async def on_ready():
@@ -226,7 +226,7 @@ async def on_ready():
     clear_screen()
     cmds = len(bot.commands)
     users = len(set(bot.get_all_members()))
-    servers = len(bot.servers)
+    servers = len(bot.guilds)
     channels = len([c for c in bot.get_all_channels()])
     print("ArtCustomBot made by Artucuno")
     print("-=-=-=-=-=-=-=-\n"
@@ -287,19 +287,17 @@ async def stats(ctx):
     today = datetime.date.today()
     since = datetime.date(2019, 5, 12)
     users = len(set(bot.get_all_members()))
-    servers = len(bot.servers)
+    servers = len(bot.guilds)
     channels = len([c for c in bot.get_all_channels()])
     mem_usage = '{:.2f} MiB'.format(__import__('psutil').Process().memory_full_info().uss / 1024 ** 2)
     em = discord.Embed(description="Made with [ArtCustomBot](https://github.com/Articuno1234/ArtCustomBot)")
     em.set_author(name='Bot Statistics')
-    em.add_field(name='Memory usage', value=mem_usage)
     em.add_field(name='Guilds', value=(servers))
     em.add_field(name='Users', value=(users))
     em.add_field(name='Channels', value=(channels))
     em.add_field(name='Commands', value=(len(bot.commands)))
-    em.add_field(name='Discord.py', value=(discord.__version__))
     em.add_field(name='Uptime', value=(uptime))
-    em.set_footer(text='Running since {} days | Say "next" for more info or say "exit"'.format(today - since))
+    em.set_footer(text='Running since {} days | Say "next", "system", "acb", "exit"'.format(today - since))
 
     if os.path.isfile('data/utils/settings.json'):
         with open('data/utils/settings.json') as json_file:  
@@ -311,16 +309,33 @@ async def stats(ctx):
                 eem.add_field(name='Github', value=(gitrepo))
                 eem.set_footer(text='Running since {} days'.format(today - since))
 
+    eeem = discord.Embed(description="Made with [ArtCustomBot](https://github.com/Articuno1234/ArtCustomBot)")
+    eeem.set_author(name='System Statistics')
+    eeem.add_field(name='Memory usage', value=mem_usage)
+    eeem.set_footer(text='Running since {} days'.format(today - since))
+
+    acbe = discord.Embed(description="Made with [ArtCustomBot](https://github.com/Articuno1234/ArtCustomBot)")
+    acbe.set_author(name='ArtCustomBot')
+    acbe.add_field(name='Version', value=("[V2](https://artcustombot.surge.sh)"))
+    acbe.add_field(name='Discord.py', value=(discord.__version__))
+    acbe.set_footer(text='Running since {} days'.format(today - since))
+
     emmm = discord.Embed(description="Timed Out/Exited!")
-    msg = await bot.say(embed=em)
-    mss = await bot.wait_for_message(author=ctx.message.author)
-    if mss.content == "next" or "exit":
-        if mss.content == "next":
-            await bot.edit_message(msg, embed=eem)
-        if mss.content == "exit":
-            await bot.edit_message(msg, embed=emmm)
+    msg = await ctx.send(embed=em)
+    try:
+        mss = await bot.wait_for('message', check=lambda message: message.author == ctx.author, timeout=10.0)
+    except asyncio.TimeoutError:
+        await msg.edit(embed=emmm)
+    if mss.content == "next":
+        await msg.edit(embed=eem)
+    elif mss.content == "system":
+        await msg.edit(embed=eeem)
+    elif mss.content == "acb":
+        await msg.edit(embed=acbe)
+    elif mss.content == "exit":
+        await msg.edit(embed=emmm)
     else:
-        await bot.edit_message(msg, embed=emmm)
+        await msg.edit(embed=emmm)
 
 if os.path.isfile('data/config.json'):
     with open('data/config.json') as json_file:  
