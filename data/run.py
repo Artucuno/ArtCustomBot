@@ -3,16 +3,42 @@ gitrepo = "https://github.com/Articuno1234/ArtCustomBot"
 # | Made by Artucuno                                  ||||                    https://github.com/Articuno1234| #
 # | https://discord.gg/6V82bKP                        ||||                             First version: 13/5/19| #
 #  ==========================================================================================================  #
-
-import subprocess
+# sett = settings
+import time
+print("ArtCustomBot Made by Artucuno\n"
+      "=======Links======\n"
+      "https://github.com/Articuno1234/ArtCustomBot\n"
+      "https://artcustombot.surge.sh/")
+print("\n"
+      "[CONSOLE] Getting Ready...")
+time.sleep(3)
+import subprocess    
 print("[DEBUG] Imported subprocess")
 try:
     import discord
-    from discord.ext import commands
-    from discord.ext.commands import Bot
-    print("[DEBUG] Imported discord.py")
+    if discord.__version__ == "0.16.0" or "0.16.12":
+        print("[DISCORD] Correct Discord Version!")
+        time.sleep(2)
+        from discord.ext import commands
+        from discord.ext.commands import Bot
+        print("[DEBUG] Imported discord.py")
+    else:
+        input("[DISCORD] Incorrect discord version! Needed: 0.16.0 or 0.16.12")
+        exit(2)
 except:
-    subprocess.call(("python3", "-m", "pip", "install", "-U discord.py==0.16.0"))
+    code = subprocess.call(("python3", "-m", "pip", "install", "-U discord.py[voice]==0.16.0"))
+    if code == 0:
+        print("[PIP] Installed discord.py[voice] v0.16.0")
+        try:
+            import discord
+            from discord.ext import commands
+            from discord.ext.commands import Bot
+        except:
+            input("[CONSOLE] Unable to start (Discord failed to import!)")
+            exit(2)
+    else:
+        input("[PIP] Unable to install discord.py[voice] v0.16.0")
+        exit()
 import logging
 print("[DEBUG] Imported logging")
 import random
@@ -36,8 +62,6 @@ import asyncio
 print("[DEBUG] Imported asyncio")
 print("\n"
       "\n")
-import botextensions as botext
-print("[DEBUG] Imported botextensions as botext")
 import datetime
 print("[DEBUG] Imported datetime")
 uptime = datetime.datetime.utcnow()  # Refreshed before login
@@ -46,8 +70,11 @@ if os.path.isfile('data/config.json'):
         data = json.load(json_file)
         for p in data['Config']:
             global botdesc
+            global botpref
+            botpref = "{}".format(p['prefix'])
             botdesc = "{}".format(p['Descript'])
 import aiohttp
+import settings as sett
 IS_WINDOWS = os.name == "nt"
 IS_MAC = sys.platform == "darwin"
 
@@ -73,6 +100,62 @@ else:
     input("[CONSOLE] MISSING CONFIG FILE!")
     exit(10)
 
+# Remove help command
+if sett.helpcmd == True:
+    bot.remove_command("help")
+    helpc = True
+else:
+    helpc = False
+
+async def send_cmd_help(ctx):
+    try:
+        if ctx.invoked_subcommand:
+            pages = formatter.format_help_for(ctx, ctx.invoked_subcommand)
+            for page in pages:
+                await bot.send_message(ctx.message.channel, page)
+        else:
+            pages = formatter.format_help_for(ctx, ctx.command)
+            for page in pages:
+                await bot.send_message(ctx.message.channel, page)
+    except Exception as e:
+        exc = '{}: {}'.format(type(e).__name__, e)
+        print(exc)
+
+class Formatter(commands.HelpFormatter):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def _add_subcommands_to_page(self, max_width, commands):
+        for name, command in sorted(commands, key=lambda t: t[0]):
+            if name in command.aliases:
+                # skip aliases
+                continue
+
+            entry = '  {0:<{width}} {1}'.format(name, command.short_doc,
+                                                width=max_width)
+            shortened = self.shorten(entry)
+            self._paginator.add_line(shortened)
+
+@bot.event
+async def on_command(command, ctx):
+    if sett.commandoutput == True:
+        print("[COMMAND] {{}} ({}{}) {}".format(ctx.message.server, botpref, command, ctx.message.author))
+    if command in sett.commands:
+        if command == "stats":
+            print("[COMMAND] Unable to disable this command!")
+        elif command == "help":
+            print("[COMMAND] Unable to disable this command!")
+        else:
+            await self.bot.say(":x: Command disabled by Owner!")
+            return
+
+@bot.event
+async def on_message(message):
+    # Ignore bots
+    if message.author.bot:
+        return
+    await bot.process_commands(message)
+
 @bot.event
 async def on_member_join(member):
     if os.path.isfile('data/acb/cogs/autorole/{}/config.json'.format(member.server.id)):
@@ -96,7 +179,7 @@ async def on_member_join(member):
                     pass
 @bot.event
 async def on_resumed():
-    print("[CONSOLE] Resumed bot")
+    print("[CONSOLE] Reconnected Bot")
 
 @bot.event
 async def on_command_error(error, ctx):
@@ -104,6 +187,12 @@ async def on_command_error(error, ctx):
         await bot.send_message(ctx.message.channel, content='This command is on a %.2fs cooldown!' % error.retry_after)
     elif isinstance(error, commands.CommandNotFound):
         pass
+    elif isinstance(error, commands.BadArgument):
+        try:
+            await send_cmd_help(ctx)
+        except Exception as e:
+            exc = '{}: {}'.format(type(e).__name__, e)
+            print("[CONSOLE] Unable to send error message to log channel!\n{}".format(exc))
     else:
         print("\n[{}] \n{}".format(ctx.message.server, error))
         if os.path.isfile('data/utils/settings.json'):
@@ -119,11 +208,16 @@ async def on_command_error(error, ctx):
 
 @bot.event
 async def on_ready():
+    if 'bot' in sett.extensions:
+        pass
+    else:
+        input("[ERROR] A vital module 'bot' was not found in extensions list!")
+        exit()
     data = {}
     data['Cog'] = []
     data['Cog'].append({
-        'cogs': "{}".format(botext.extensions),
-        'count': "{}".format(len(botext.extensions))
+        'cogs': "{}".format(sett.extensions),
+        'count': "{}".format(len(sett.extensions))
         })
     with open('data/cogs.json', 'w') as outfile:
         json.dump(data, outfile)
@@ -146,7 +240,7 @@ async def on_ready():
     print("\n"
           "----- COGS -----")
     if __name__ == "__main__":
-        for extension in botext.extensions:
+        for extension in sett.extensions:
             try:
                 bot.load_extension(extension)
                 if extension == "audio":
@@ -156,30 +250,35 @@ async def on_ready():
             except Exception as e:
                 exc = '{}: {}'.format(type(e).__name__, e)
                 if extension == "bot":
-                    input("[CONSOLE] Unable to load required extension '{}'".format(extension))
+                    input("[CONSOLE] Unable to load required extension '{}'\n{}".format(extension, exc))
                     print("[CONSOLE] Logging out...")
                     await bot.logout()
                     exit()
-                print('[COG] Failed to load extension {}\n{}'.format(extension, exc))
-    if os.path.isfile('data/game.json'):
-        with open('data/game.json') as json_file:  
-            data = json.load(json_file)
-            for p in data['Game']:
-                await bot.change_presence(game=discord.Game(name=p['Gme'], type=p['Type']))
-    if os.path.isfile('data/mdbl.json'):
-        with open('data/mdbl.json') as json_file:  
-            data = json.load(json_file)
-            for p in data['Mdbl']:
-                if p['Active'] == "False":
-                    print("[MDBL] Not active")
                 else:
-                    if os.path.isfile('data/apipy/mdbl.py'):
-                        from apipy import mdbl
-                        await mdbl.start(bot)
-                        await mdbl.post(servers, users, channels, cmds)
-                    else:
-                        subprocess.call(("git", "clone", "https://github.com/MegaDiscordBotList/apipy.git", "data/apipy"))
+                    print('[COG] Failed to load extension {}\n{}'.format(extension, exc))
+    try:
+        await bot.change_presence(game=discord.Game(name=sett.game, type=sett.gtype))
+        if sett.game == "":
+            print("[GAME] No game was set!")
+        else:
+            print("[GAME] Set game to '{}'".format(sett.game))
+    except Exception as e:
+        exc = '{}: {}'.format(type(e).__name__, e)
+        print("[GAME] Unable to set game\n{}".format(exc))
+    if sett.mdbl == True:
+        if os.path.isfile('data/apipy/mdbl.py'):
+            from apipy import mdbl
+            await mdbl.start(bot)
+            await mdbl.post(servers, users, channels, cmds)
+        else:
+            code = subprocess.call(("git", "clone", "https://github.com/MegaDiscordBotList/apipy.git", "data/apipy"))
+            if code == 0:
+                print("[MDBL] Downloaded MDBL module!")
+            else:
+                print("[MDBL] Unable to install MDBL Module!")
     print("----- Bot -----")
+    if helpc == True:
+        print("[CONSOLE] Removed {}help command".format(botpref))
 
 @bot.command(pass_context=True)
 async def stats(ctx):
@@ -229,6 +328,8 @@ if os.path.isfile('data/config.json'):
         for p in data['Config']:
             clear_screen()
             print("Logging into Discord...")
+            formatter_class = Formatter
+            formatter = formatter_class(show_check_failure=False)
             time.sleep(2)
             clear_screen()
             try:

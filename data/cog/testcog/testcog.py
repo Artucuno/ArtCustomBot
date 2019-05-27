@@ -8,28 +8,14 @@ from discord.ext import commands
 import random
 from discord.ext.commands.cooldowns import BucketType
 
-class server():
+class test():
     def __init__(self, bot):
         self.bot = bot
 
     @commands.command(pass_context=True)
-    async def serverinfo(self, ctx):
+    async def test(self, ctx):
         """Show current server info"""
-        server = ctx.message.server
-        em = discord.Embed()
-        em.set_author(name=ctx.message.server)
-        em.add_field(name="Owner", value=(ctx.message.server.owner))
-        em.add_field(name="ID", value=(ctx.message.server.id))
-        em.add_field(name="Created At", value=(ctx.message.server.created_at))
-        await self.bot.say(embed=em)
-
-    @commands.command(pass_context=True)
-    async def roleinfo(self, ctx, role: discord.Role):
-        """Show role id"""
-        try:
-            await self.bot.say(role.id)
-        except:
-            await self.bot.say("Error")
+        await self.bot.say("test")
 
 def setup(bot):
-        bot.add_cog(server(bot))
+        bot.add_cog(test(bot))

@@ -59,7 +59,6 @@ class main():
         
         await self.bot.change_presence(game=discord.Game(name=game, type=typ))
 
-    # token = 'NTc2OTMwMTIzNjUyMDA1OTA5.XNpwvQ.nWO2bOG4Ho9du8tDzXUZk33FaOk'
     @commands.command(pass_context=True, no_pm=True)
     async def owner(self, ctx):
         """Set bot owner
@@ -127,6 +126,7 @@ class main():
                         })
                     with open('data/utils/settings.json', 'w') as outfile:
                         json.dump(data, outfile)
+                    
                     await self.bot.say("Set Error logging channel!")
 
 

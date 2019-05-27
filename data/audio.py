@@ -8,6 +8,7 @@ from discord.ext import commands
 import random
 from discord.ext.commands.cooldowns import BucketType
 from discord.voice_client import VoiceClient
+from discord.utils import get
 import logging
 from utils import checks
 import os
@@ -15,6 +16,12 @@ import json
 import time
 import subprocess
 import youtube_dl
+import settings
+
+if settings.DJ == True:
+    drole = settings.DJRole
+else:
+    drole = None
 
 def get_voice_state(self, server):
     state = self.voice_states.get(server.id)
@@ -47,6 +54,16 @@ class audio():
     async def play(self, ctx, url=""):
         """Play something"""
         author = ctx.message.author
+        server = ctx.message.server
+        role = discord.Role = drole
+        if drole == None:
+            pass
+        else:
+            if drole in [y.id for y in author.roles]:
+                pass
+            else:
+                await self.bot.say(":x: You do not have the required role (`{}`)\n".format(drole, role))
+                return
         if url == "":
             await self.bot.say("```\n"
                                "play [url]\n"
@@ -61,37 +78,40 @@ class audio():
                         voice = await self.bot.join_voice_channel(ctx.message.author.voice_channel)
             player = await voice.create_ytdl_player(url)
             player.start()
-            try:
-                if os.path.isfile('data/acb/cogs/audio/failed/{}-{}.json'.format(player.title, player.uploader)):
-                    print("[AUDIO] Passed Failed Song playing")
+            if settings.playing == True:
+                try:
                     if os.path.isfile('data/acb/cogs/audio/failed/{}-{}.json'.format(player.title, player.uploader)):
-                        with open('data/acb/cogs/audio/failed/{}-{}.json'.format(player.title, player.uploader)) as json_file:  
-                            data = json.load(json_file)
-                            for p in data['Config']:
-                                em = discord.Embed()
-                                em.set_author(name='Now Playing {}...'.format(player.title))
-                                em.set_footer(text='Failed song request found! | {} | {} | {} | found by {}'.format(p['url'], p['date'], p['title'], p['foundby']))
-                                await self.bot.say(embed=em)
-                else:
-                    em = discord.Embed()
-                    em.add_field(name='Now playing...', value=(player.title))
-                    em.add_field(name='Uploader', value=(player.uploader))
-                    em.add_field(name='Description', value=(player.description))
-                    em.add_field(name='Duration', value=(player.duration))
-                    await self.bot.say(embed=em)
-            except Exception as e:
-                data = {}
-                data['Config'] = []
-                data['Config'].append({
-                    'foundby': "{}".format(author),
-                    'url': "{}".format(url),
-                    'date': "{}".format(time.asctime()),
-                    'title': "{}".format(player.title)
-                    })
-                with open('data/acb/cogs/audio/failed/{}-{}.json'.format(player.title, player.uploader), 'w') as outfile:
-                    json.dump(data, outfile)
-                exc = '{}: {}'.format(type(e).__name__, e)
-                print("[AUDIO] Unable to show Now Playing for {}\n{}".format(url, exc))
+                        print("[AUDIO] Passed Failed Song playing")
+                        if os.path.isfile('data/acb/cogs/audio/failed/{}-{}.json'.format(player.title, player.uploader)):
+                            with open('data/acb/cogs/audio/failed/{}-{}.json'.format(player.title, player.uploader)) as json_file:  
+                                data = json.load(json_file)
+                                for p in data['Config']:
+                                    em = discord.Embed()
+                                    em.set_author(name='Now Playing {}...'.format(player.title))
+                                    em.set_footer(text='Failed song request found! | {} | {} | {} | found by {}'.format(p['url'], p['date'], p['title'], p['foundby']))
+                                    await self.bot.say(embed=em)
+                    else:
+                        em = discord.Embed()
+                        em.add_field(name='Now playing...', value=(player.title))
+                        em.add_field(name='Uploader', value=(player.uploader))
+                        em.add_field(name='Description', value=(player.description))
+                        em.add_field(name='Duration', value=(player.duration))
+                        await self.bot.say(embed=em)
+                except Exception as e:
+                    data = {}
+                    data['Config'] = []
+                    data['Config'].append({
+                        'foundby': "{}".format(author),
+                        'url': "{}".format(url),
+                        'date': "{}".format(time.asctime()),
+                        'title': "{}".format(player.title)
+                        })
+                    with open('data/acb/cogs/audio/failed/{}-{}.json'.format(player.title, player.uploader), 'w') as outfile:
+                        json.dump(data, outfile)
+                    exc = '{}: {}'.format(type(e).__name__, e)
+                    print("[AUDIO] Unable to show Now Playing for {}\n{}".format(url, exc))
+            else:
+                pass
 
     @commands.command(pass_context = True)
     async def disconnect(self, ctx):

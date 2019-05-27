@@ -107,7 +107,12 @@ def launch():
           "4. Update Bot")
     choice = user_choice()
     if choice == "1":
-        subprocess.call(("python3", "data/run.py"))
+        clear_screen()
+        code = subprocess.call(("python3", "data/run.py"))
+        if code == "0":
+            pass
+        else:
+            input("[CONSOLE] Unable to launch!")
     if choice == "2":
         os.remove("data/config.json")
         os.remove("data/tken.py")

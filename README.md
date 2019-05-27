@@ -9,10 +9,9 @@ Made with discord.py 0.16.0/0.16.12 and python3
 - Server
 - Autorole / Welcome Message
 - Fully Customisable
-- Downloadable cogs (Still WIP)
 
 # Tested on
 - Raspberry pi 2 & 3
 
 # Links
-[Website](https://artcustombot.surge.sh) | [Installing - Linux](https://artcustombot.surge.sh/docs) | [Discord](https://discord.gg/6V82bKP) | [Github](https://github.com/Articuno1234)
+[Installing - Linux](https://github.com/Articuno1234/ArtCustomBot/wiki/installation-Linux) | [Discord](https://discord.gg/6V82bKP) | [Github](https://github.com/Articuno1234)
